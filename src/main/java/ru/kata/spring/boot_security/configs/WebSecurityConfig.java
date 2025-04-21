@@ -26,33 +26,33 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                .authorizeRequests()
+            .authorizeRequests()
                 .antMatchers("/user/**").hasAnyRole("USER", "ADMIN")
                 .antMatchers("/admin/**").hasAnyRole("ADMIN")
                 .antMatchers("/", "/index").permitAll()
                 .anyRequest().authenticated()
-                .and()
-                .formLogin().successHandler(successUserHandler)
+            .and()
+            .formLogin().successHandler(successUserHandler)
                 .permitAll()
-                .and()
-                .logout()
+            .and()
+            .logout()
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login")
                 .permitAll()
-                .and()
-                .exceptionHandling()
-                .and()
-                .sessionManagement()
+            .and()
+            .exceptionHandling()
+            .and()
+            .sessionManagement()
                 .maximumSessions(1)
                 .expiredUrl("/login");
     }
-
+    @Override
         protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(userDetailsService);
     }
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
 }

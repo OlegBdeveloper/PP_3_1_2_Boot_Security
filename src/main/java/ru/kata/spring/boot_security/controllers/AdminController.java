@@ -20,7 +20,7 @@ public class AdminController {
     private final RoleService roleService;
 
     @Autowired
-    private AdminController(UserService userService, RoleService roleService) {
+    public AdminController(UserService userService, RoleService roleService) {
         this.userService = userService;
         this.roleService = roleService;
     }
@@ -39,13 +39,15 @@ public class AdminController {
     }
 
     @PostMapping("/add")
-    public String addUser(@ModelAttribute("user") @Valid User user, BindingResult result) {
+    public String addUser(@ModelAttribute("user") @Valid User user, BindingResult result, ModelMap model) {
         if (result.hasErrors()) {
+            model.addAttribute("error", "Пожалуйста, исправьте ошибки.");
             return "user-add";
         }
-        // email verification
+
         Optional<User> userWithSameEmail = userService.findByEmail(user.getEmail());
         if (userWithSameEmail.isPresent()) {
+            model.addAttribute("error", "Этот email уже используется.");
             return "user-add";
         }
 
@@ -56,29 +58,40 @@ public class AdminController {
     @GetMapping("/edit")
     public String editUserForm(@RequestParam("id") int id, ModelMap model) {
         User user = userService.findById(id);
+        if (user == null) {
+            model.addAttribute("error", "Пользователь не найден.");
+            return "redirect:/admin";
+        }
         model.addAttribute("user", user);
         model.addAttribute("allRoles", roleService.findAll());
         return "user-edit";
     }
 
     @PostMapping("/edit")
-    public String editUser(@RequestParam("id") int id, @ModelAttribute("user") @Valid User user, BindingResult result) {
+    public String editUser(@RequestParam("id") int id, @ModelAttribute("user") @Valid User user, BindingResult result, ModelMap model) {
         if (result.hasErrors()) {
+            model.addAttribute("error", "Пожалуйста, исправьте ошибки.");
             return "user-edit";
         }
 
         Optional<User> userWithSameEmail = userService.findByEmail(user.getEmail());
         if (userWithSameEmail.isPresent() && userWithSameEmail.get().getId() != id) {
-
             result.rejectValue("email", "error.user", "Этот email уже используется другим пользователем.");
+            model.addAttribute("error", "Этот email уже используется.");
             return "user-edit";
         }
+
         userService.update(id, user);
         return "redirect:/admin";
     }
 
     @GetMapping("/delete")
-    public String deleteUser(@RequestParam("id") int id) {
+    public String deleteUser(@RequestParam("id") int id, ModelMap model) {
+        User user = userService.findById(id);
+        if (user == null) {
+            model.addAttribute("error", "Пользователь не найден.");
+            return "redirect:/admin";
+        }
         userService.delete(id);
         return "redirect:/admin";
     }
